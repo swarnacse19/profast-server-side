@@ -1,7 +1,7 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 dotenv.config();
 
@@ -18,41 +18,73 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 async function run() {
   try {
     await client.connect();
 
-    const db = client.db('parcelDB');
-    const parcelCollection = db.collection('parcels');
+    const db = client.db("parcelDB");
+    const parcelCollection = db.collection("parcels");
 
-    app.get('/parcels', async(req, res) =>{
-      const result = await parcelCollection.find().toArray();
-      res.send(result);
-    })
+    app.get("/parcels", async (req, res) => {
+      try {
+        const email = req.query.email;
 
-    app.post('/parcels', async(req, res) =>{
+        let query = {};
+        if (email) {
+          query = { created_by: email };
+        }
+
+        const parcels = await parcelCollection
+          .find(query)
+          .sort({ creation_date: -1 })
+          .toArray();
+
+        res.send(parcels);
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
+    app.post("/parcels", async (req, res) => {
       const newParcel = req.body;
       const result = await parcelCollection.insertOne(newParcel);
       res.send(result);
-    })
-    
+    });
+
+    app.delete("/parcels/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+
+        const result = await parcelCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+
+        res.send(result); 
+
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ success: false, message: "Server error" });
+      }
+    });
+
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
-    
     // await client.close();
   }
 }
 run().catch(console.dir);
 
+app.get("/", (req, res) => {
+  res.send("parcel server is running");
+});
 
-app.get('/', (req, res) =>{
-    res.send('parcel server is running');
-})
-
-app.listen(port, () =>{
-    console.log(`server is running on port ${port}`);
-})
+app.listen(port, () => {
+  console.log(`server is running on port ${port}`);
+});

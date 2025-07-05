@@ -49,6 +49,25 @@ async function run() {
       }
     });
 
+    app.get("/parcels/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+
+        const parcel = await parcelCollection.findOne({
+          _id: new ObjectId(id),
+        });
+
+        if (parcel) {
+          res.send(parcel);
+        } else {
+          res.status(404).send({ message: "Parcel not found" });
+        }
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
     app.post("/parcels", async (req, res) => {
       const newParcel = req.body;
       const result = await parcelCollection.insertOne(newParcel);
@@ -63,8 +82,7 @@ async function run() {
           _id: new ObjectId(id),
         });
 
-        res.send(result); 
-
+        res.send(result);
       } catch (err) {
         console.error(err);
         res.status(500).send({ success: false, message: "Server error" });

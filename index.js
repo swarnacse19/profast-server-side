@@ -97,24 +97,24 @@ async function run() {
       }
     });
 
-    // app.get("/parcels/:id", async (req, res) => {
-    //   try {
-    //     const id = req.params.id;
+    app.get("/parcels/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
 
-    //     const parcel = await parcelCollection.findOne({
-    //       _id: new ObjectId(id),
-    //     });
+        const parcel = await parcelCollection.findOne({
+          _id: new ObjectId(id),
+        });
 
-    //     if (parcel) {
-    //       res.send(parcel);
-    //     } else {
-    //       res.status(404).send({ message: "Parcel not found" });
-    //     }
-    //   } catch (err) {
-    //     console.error(err);
-    //     res.status(500).send({ message: "Server error" });
-    //   }
-    // });
+        if (parcel) {
+          res.send(parcel);
+        } else {
+          res.status(404).send({ message: "Parcel not found" });
+        }
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
 
     // app.post("/tracking", async (req, res) => {
     //   const {

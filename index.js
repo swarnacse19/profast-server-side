@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-// const admin = require("firebase-admin");
+const admin = require("firebase-admin");
 
 dotenv.config();
 
@@ -62,19 +62,19 @@ async function run() {
       }
     };
 
-    // app.post("/users", async (req, res) => {
-    //   const email = req.body.email;
-    //   const userExists = await usersCollection.findOne({ email });
-    //   if (userExists) {
-    //     // update last log in
-    //     return res
-    //       .status(200)
-    //       .send({ message: "User already exists", inserted: false });
-    //   }
-    //   const user = req.body;
-    //   const result = await usersCollection.insertOne(user);
-    //   res.send(result);
-    // });
+    app.post("/users", async (req, res) => {
+      const email = req.body.email;
+      const userExists = await usersCollection.findOne({ email });
+      if (userExists) {
+        // update last log in
+        return res
+          .status(200)
+          .send({ message: "User already exists", inserted: false });
+      }
+      const user = req.body;
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
 
     app.get("/parcels", async (req, res) => {
       try {
@@ -138,11 +138,11 @@ async function run() {
     //   res.send({ success: true, insertedId: result.insertedId });
     // });
 
-    // app.post("/riders", async (req, res) => {
-    //   const rider = req.body;
-    //   const result = await ridersCollection.insertOne(rider);
-    //   res.send(result);
-    // });
+    app.post("/riders", async (req, res) => {
+      const rider = req.body;
+      const result = await ridersCollection.insertOne(rider);
+      res.send(result);
+    });
 
     app.get("/payments", verifyFBToken, async (req, res) => {
       try {

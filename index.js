@@ -157,6 +157,24 @@ async function run() {
       }
     });
 
+    app.patch("/riders/:id/status", async (req, res) => {
+      const { id } = req.params;
+      const { status } = req.body;
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status,
+        },
+      };
+
+      try {
+        const result = await ridersCollection.updateOne(query, updateDoc);
+        res.send(result);
+      } catch (err) {
+        res.status(500).send({ message: "Failed to update rider status" });
+      }
+    });
+
     app.get("/payments", verifyFBToken, async (req, res) => {
       try {
         const userEmail = req.query.email;

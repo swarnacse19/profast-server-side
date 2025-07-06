@@ -9,16 +9,16 @@ dotenv.config();
 const stripe = require("stripe")(process.env.PAYMENT_GATEWAY_KEY);
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
 
-// const serviceAccount = require("./firebase-adminsdk.json");
+const serviceAccount = require("./firebase-adminsdk.json");
 
-// admin.initializeApp({
-//   credential: admin.credential.cert(serviceAccount),
-// });
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.saov0by.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -40,27 +40,27 @@ async function run() {
     const paymentsCollection = db.collection("payments");
     const ridersCollection = db.collection('riders');
 
-    // custom middlewares
-    // const verifyFBToken = async (req, res, next) => {
-    //   const authHeader = req.headers.authorization;
-    //   if (!authHeader) {
-    //     return res.status(401).send({ message: "unauthorized access" });
-    //   }
-    //   const token = authHeader.split(" ")[1];
-    //   console.log("token in the middleware", token);
-    //   if (!token) {
-    //     return res.status(401).send({ message: "unauthorized access" });
-    //   }
+    //custom middlewares
+    const verifyFBToken = async (req, res, next) => {
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+        return res.status(401).send({ message: "unauthorized access" });
+      }
+      const token = authHeader.split(" ")[1];
+      console.log("token in the middleware", token);
+      if (!token) {
+        return res.status(401).send({ message: "unauthorized access" });
+      }
 
-    //   // verify the token
-    //   try {
-    //     const decoded = await admin.auth().verifyIdToken(token);
-    //     req.decoded = decoded;
-    //     next();
-    //   } catch (error) {
-    //     return res.status(403).send({ message: "forbidden access" });
-    //   }
-    // };
+      // verify the token
+      try {
+        const decoded = await admin.auth().verifyIdToken(token);
+        req.decoded = decoded;
+        next();
+      } catch (error) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+    };
 
     // app.post("/users", async (req, res) => {
     //   const email = req.body.email;
@@ -144,22 +144,22 @@ async function run() {
     //   res.send(result);
     // });
 
-    // app.get("/payments", verifyFBToken, async (req, res) => {
-    //   try {
-    //     const userEmail = req.query.email;
+    app.get("/payments", verifyFBToken, async (req, res) => {
+      try {
+        const userEmail = req.query.email;
 
-    //     const query = userEmail ? { email: userEmail } : {};
-    //     const options = { sort: { paid_at: -1 } }; // Latest first
+        const query = userEmail ? { email: userEmail } : {};
+        const options = { sort: { paid_at: -1 } }; // Latest first
 
-    //     const payments = await paymentsCollection
-    //       .find(query, options)
-    //       .toArray();
-    //     res.send(payments);
-    //   } catch (error) {
-    //     console.error("Error fetching payment history:", error);
-    //     res.status(500).send({ message: "Failed to get payments" });
-    //   }
-    // });
+        const payments = await paymentsCollection
+          .find(query, options)
+          .toArray();
+        res.send(payments);
+      } catch (error) {
+        console.error("Error fetching payment history:", error);
+        res.status(500).send({ message: "Failed to get payments" });
+      }
+    });
 
     app.post("/parcels", async (req, res) => {
       const newParcel = req.body;

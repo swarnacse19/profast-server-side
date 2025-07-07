@@ -84,6 +84,47 @@ async function run() {
       }
     });
 
+    app.get("/users/search", async (req, res) => {
+      const emailQuery = req.query.email;
+      if (!emailQuery) {
+        return res.status(400).send({ message: "Missing email query" });
+      }
+
+      const regex = new RegExp(emailQuery, "i"); // case-insensitive partial match
+
+      try {
+        const users = await usersCollection
+          .find({ email: { $regex: regex } })
+          // .project({ email: 1, createdAt: 1, role: 1 })
+          .limit(10)
+          .toArray();
+        res.send(users);
+      } catch (error) {
+        console.error("Error searching users", error);
+        res.status(500).send({ message: "Error searching users" });
+      }
+    });
+
+    app.patch("/users/:id/role", async (req, res) => {
+      const { id } = req.params;
+      const { role } = req.body;
+
+      if (!["admin", "user"].includes(role)) {
+        return res.status(400).send({ message: "Invalid role" });
+      }
+
+      try {
+        const result = await usersCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { role } }
+        );
+        res.send({ message: `User role updated to ${role}`, result });
+      } catch (error) {
+        console.error("Error updating user role", error);
+        res.status(500).send({ message: "Failed to update user role" });
+      }
+    });
+
     app.post("/users", async (req, res) => {
       const email = req.body.email;
       const userExists = await usersCollection.findOne({ email });

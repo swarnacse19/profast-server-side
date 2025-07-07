@@ -237,6 +237,24 @@ async function run() {
       }
     });
 
+    app.get("/riders/available", async (req, res) => {
+      const { district } = req.query;
+
+      try {
+        const riders = await ridersCollection
+          .find({
+            district,
+            // status: { $in: ["approved", "active"] },
+            // work_status: "available",
+          })
+          .toArray();
+
+        res.send(riders);
+      } catch (err) {
+        res.status(500).send({ message: "Failed to load riders" });
+      }
+    });
+
     app.post("/tracking", async (req, res) => {
       const {
         tracking_id,
